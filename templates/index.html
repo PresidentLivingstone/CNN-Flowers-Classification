@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Flower Classifier</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%);
+            min-height: 100vh;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(31, 38, 135, 0.25);
+        }
+
+        .upload-btn {
+            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .flower-animation {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            pointer-events: none;
+            z-index: 1000;
+            animation: fall 3s linear infinite;
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(-100px) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .result-card {
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #4ECDC4;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .confidence-bar {
+            height: 10px;
+            background: linear-gradient(90deg, #4ECDC4, #FF6B6B);
+            border-radius: 5px;
+            transition: width 1s ease-in-out;
+        }
+
+        .floating {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+    </style>
+</head>
+<body class="py-12">
+    <!-- Floating Flowers Background -->
+    <div id="flower-container"></div>
+
+    <div class="container mx-auto px-4 max-w-3xl relative">
+        <!-- Header -->
+        <div class="text-center mb-12 animate__animated animate__fadeIn">
+            <h1 class="text-5xl font-bold text-white mb-4 floating">
+                AI Flower Classifier
+            </h1>
+            <p class="text-white text-xl opacity-90">Discover the beauty of nature with AI</p>
+        </div>
+
+        <!-- Upload Section -->
+        <div class="glass-card p-8 mb-8 animate__animated animate__fadeInUp">
+            <form id="uploadForm" class="text-center">
+                <input type="file" 
+                       id="imageInput" 
+                       accept="image/*" 
+                       class="hidden">
+                <button type="button" 
+                        onclick="document.getElementById('imageInput').click()" 
+                        class="upload-btn font-semibold">
+                    Choose Your Flower
+                </button>
+                <p class="text-gray-500 mt-4">Supports: JPG, JPEG, PNG</p>
+                <p>FLOWER_CLASSES = ['Rose', 'Daisy', 'Dandelion', 'Sunflower', 'Tulip']</p>
+            </form>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results" class="glass-card p-8 hidden result-card">
+            <!-- Image Preview -->
+            <div class="mb-8 text-center">
+                <img id="imagePreview" class="max-h-80 mx-auto rounded-lg shadow-lg transform transition-transform hover:scale-105">
+            </div>
+            
+            <!-- Loading Spinner -->
+            <div id="loading" class="text-center hidden">
+                <div class="loading-spinner mx-auto"></div>
+                <p class="mt-4 text-gray-600">Analyzing your flower...</p>
+            </div>
+
+            <!-- Result Display -->
+            <div id="resultDisplay" class="text-center hidden">
+                <h3 class="text-3xl font-bold text-gray-800 mb-4">Result</h3>
+                <div class="bg-gradient-to-r from-green-400 to-blue-500 text-white p-4 rounded-lg mb-4">
+                    <p id="flowerName" class="text-2xl font-semibold"></p>
+                </div>
+                <div class="space-y-2">
+                    <p id="confidence" class="text-gray-600"></p>
+                    <div class="confidence-bar" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Error Display -->
+            <div id="errorDisplay" class="hidden">
+                <p class="text-red-500 text-center"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Create floating flowers
+        function createFlower() {
+            const flower = document.createElement('div');
+            flower.className = 'flower-animation';
+            flower.style.left = Math.random() * window.innerWidth + 'px';
+            flower.innerHTML = '🌸';
+            document.getElementById('flower-container').appendChild(flower);
+            
+            flower.addEventListener('animationend', () => {
+                flower.remove();
+            });
+        }
+
+        // Create flowers periodically
+        setInterval(createFlower, 3000);
+
+        document.getElementById('imageInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Show results container with animation
+            const results = document.getElementById('results');
+            results.classList.remove('hidden');
+            results.classList.add('animate__animated', 'animate__fadeIn');
+            
+            // Show preview
+            const preview = document.getElementById('imagePreview');
+            preview.src = URL.createObjectURL(file);
+            preview.classList.remove('hidden');
+
+            // Show loading state
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('resultDisplay').classList.add('hidden');
+            document.getElementById('errorDisplay').classList.add('hidden');
+
+            // Send to server
+            const formData = new FormData();
+            formData.append('file', file);
+
+            fetch('/predict', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('loading').classList.add('hidden');
+                
+                if (data.error) {
+                    document.getElementById('errorDisplay').classList.remove('hidden');
+                    document.getElementById('errorDisplay').querySelector('p').textContent = data.error;
+                } else {
+                    const resultDisplay = document.getElementById('resultDisplay');
+                    resultDisplay.classList.remove('hidden');
+                    document.getElementById('flowerName').textContent = data.flower;
+                    document.getElementById('confidence').textContent = `Confidence: ${data.confidence}`;
+                    
+                    // Animate confidence bar
+                    const confidenceValue = parseFloat(data.confidence);
+                    const confidenceBar = document.querySelector('.confidence-bar');
+                    setTimeout(() => {
+                        confidenceBar.style.width = `${confidenceValue}%`;
+                    }, 100);
+                }
+            })
+            .catch(error => {
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('errorDisplay').classList.remove('hidden');
+                document.getElementById('errorDisplay').querySelector('p').textContent = 'An error occurred while processing the image';
+                console.error('Error:', error);
+            });
+        });
+    </script>
+</body>
+</html>
