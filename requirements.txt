@@ -1,5 +1,6 @@
-Flask
-opencv-python
-numpy
-tensorflow
-Werkzeug
+Flask==2.0.1
+flask-lambda==0.12
+tensorflow==2.6.0
+opencv-python==4.5.3.56
+numpy==1.19.5
+werkzeug==2.0.1
