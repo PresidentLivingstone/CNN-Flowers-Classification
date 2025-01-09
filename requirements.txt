@@ -3,6 +3,4 @@ opencv-python
 numpy
 werkzeug
 gunicorn
-keras==2.12.0
-tensorflow==2.12.0
-tensorflow-cpu
+tensorflow-intel-0.0.1 
