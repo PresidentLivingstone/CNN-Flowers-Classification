@@ -1,6 +1,7 @@
 Flask
-tensorflow
 opencv-python
 numpy
 werkzeug
 gunicorn
+tensorflow-cpu
+tensorflow==<compatible_version> --upgrade
