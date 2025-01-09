@@ -4,6 +4,10 @@ import numpy as np
 import tensorflow as tf
 import os
 from werkzeug.utils import secure_filename
+import logging
+logging.getLogger('tensorflow').setLevel(logging.ERROR)
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
@@ -83,5 +87,5 @@ def predict():
     return jsonify({'error': 'Invalid file type'}), 400
 
 if __name__ == '__main__':
-    print("Starting Flask application...")
-    app.run(debug=False, port=5000,host='127.0.0.1' )
+    port = int(os.environ.get("PORT", 5000))  # Default to 5000 if no PORT variable is set
+    app.run(host='0.0.0.0', port=port)
