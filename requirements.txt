@@ -4,4 +4,4 @@ numpy
 werkzeug
 gunicorn
 tensorflow-cpu
-tensorflow==<compatible_version> --upgrade
+tensorflow-cpu==2.12.0
