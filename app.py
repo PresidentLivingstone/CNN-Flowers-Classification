@@ -1,10 +1,11 @@
 from flask import Flask, render_template, request, jsonify
 import cv2
 import numpy as np
-import tensorflow as tf
 import os
+os.environ["CUDA_VISIBLE_DEVICES"] = ""
 from werkzeug.utils import secure_filename
 import logging
+import tensorflow as tf
 logging.getLogger('tensorflow').setLevel(logging.ERROR)
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
