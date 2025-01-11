@@ -2,15 +2,10 @@ from flask import Flask, render_template, request, jsonify
 import cv2
 import numpy as np
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = ""
+import tensorflow as tf
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 from werkzeug.utils import secure_filename
 import logging
-import tensorflow as tf
-logging.getLogger('tensorflow').setLevel(logging.ERROR)
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-tf.config.threading.set_intra_op_parallelism_threads(4)  # Example: Use 4 threads
-tf.config.threading.set_inter_op_parallelism_threads(2)  # Example: Use 2 threads for inter-op parallelism
-
 
 
 app = Flask(__name__)
